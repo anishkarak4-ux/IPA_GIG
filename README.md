@@ -4,6 +4,11 @@ Digital Image Processing project using Python and OpenCV.
 
 The application lets a user select an object in a video or webcam stream, tracks it frame by frame, draws the bounding box, plots the movement path, estimates traveled pixel distance, displays FPS, and saves an annotated output video plus CSV metrics.
 
+The project includes two trackers:
+
+- `src/yolo_tracker.py`: recommended robust tracker using YOLO + BoT-SORT/ByteTrack.
+- `src/tracker_app.py`: classical OpenCV ROI tracker for DIP algorithm comparison.
+
 ## Features
 
 - Manual region-of-interest selection
@@ -35,29 +40,45 @@ pip install -r requirements.txt
 
 Use `opencv-contrib-python`, not plain `opencv-python`, because OpenCV trackers are part of the contrib build on many installations.
 
-## Run With Webcam
+## Recommended Run
 
 ```bash
-python src/tracker_app.py --tracker csrt
+python src/yolo_tracker.py --source 0 --tracker botsort.yaml
 ```
 
-If the object goes out of frame and returns, the app tries to reacquire it using the initially selected object patch. You can tune this:
+This version does not require manual box selection. It detects common object classes automatically and assigns track IDs. It is better when objects leave and re-enter the frame.
+
+For faster tracking:
 
 ```bash
-python src/tracker_app.py --tracker csrt --redetect-threshold 0.55
+python src/yolo_tracker.py --source 0 --tracker bytetrack.yaml
 ```
-
-Lower threshold values reacquire more easily but may lock onto the wrong object.
 
 ## Run With A Video
 
 Place a video in `data/input`, then run:
 
 ```bash
-python src/tracker_app.py --video data/input/sample.mp4 --tracker csrt
+python src/yolo_tracker.py --source data/input/sample.mp4 --tracker botsort.yaml
+```
+
+The first YOLO run may download `yolov8n.pt`.
+
+## Classical OpenCV Run
+
+Use this version when you need to show traditional DIP tracking with manual ROI selection:
+
+```bash
+python src/tracker_app.py --tracker csrt
 ```
 
 ## Controls
+
+For `yolo_tracker.py`:
+
+- Press `q` to quit.
+
+For `tracker_app.py`:
 
 - Draw a box around the object and press Enter or Space to start.
 - Press `s` to select/reset the tracked object.
@@ -87,6 +108,8 @@ By default, the app writes:
 
 - `data/output/tracked_output.avi`
 - `data/output/tracking_metrics.csv`
+- `data/output/yolo_tracked_output.avi`
+- `data/output/yolo_tracking_metrics.csv`
 
 Disable saving:
 

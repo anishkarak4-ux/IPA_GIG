@@ -6,13 +6,13 @@ Real-Time Object Tracking and Trajectory Visualization using Digital Image Proce
 
 ## Problem Statement
 
-Object tracking is a common computer vision task where the goal is to locate the same object across consecutive video frames. This project implements an interactive tracking system using OpenCV trackers and visualizes object movement through bounding boxes, centroids, and trajectory paths.
+Object tracking is a common computer vision task where the goal is to locate the same object across consecutive video frames. This project implements a robust detector-based tracking system using YOLO with BoT-SORT/ByteTrack and also includes a classical OpenCV ROI tracker for comparison.
 
 ## Objectives
 
 - Capture video frames from webcam or video file.
-- Allow the user to select the object region.
-- Track the selected object across frames.
+- Detect objects in each frame using YOLO.
+- Track detected objects across frames using BoT-SORT or ByteTrack.
 - Re-detect the object if tracking temporarily fails.
 - Draw bounding boxes and centroid path.
 - Measure frame rate and approximate pixel displacement.
@@ -20,18 +20,24 @@ Object tracking is a common computer vision task where the goal is to locate the
 
 ## Methodology
 
-1. Read the first frame from the selected video source.
-2. Select a region of interest around the target object.
-3. Initialize an OpenCV tracker with the selected bounding box.
-4. For each new frame, update the tracker and get the new bounding box.
-5. If the tracker loses the object, use template matching with the original ROI to try reacquisition.
+1. Read frames from webcam or video file.
+2. Use YOLO to detect objects in the frame.
+3. Send detections to BoT-SORT or ByteTrack.
+4. Assign persistent IDs to tracked objects.
+5. Keep recent centroid points for each ID.
 6. Calculate the centroid of the bounding box.
 7. Draw the bounding box, centroid, and trajectory line.
 8. Save output video and CSV metrics.
 
 ## Algorithms
 
-The implementation supports four OpenCV trackers:
+The recommended implementation supports:
+
+- YOLO: object detection in each frame.
+- BoT-SORT: tracking with motion association and stronger handling of occlusion.
+- ByteTrack: fast tracking using high-confidence and low-confidence detections.
+
+The comparison implementation supports four OpenCV trackers:
 
 - CSRT: accurate correlation-filter tracker suitable for object appearance changes.
 - KCF: faster correlation-filter tracker with good general performance.
