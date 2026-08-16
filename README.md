@@ -46,12 +46,18 @@ Use `opencv-contrib-python`, not plain `opencv-python`, because OpenCV trackers 
 python src/yolo_tracker.py --source 0 --tracker botsort.yaml
 ```
 
-This version does not require manual box selection. It detects common object classes automatically and assigns track IDs. It is better when objects leave and re-enter the frame.
+This version detects common object classes automatically. Click one detected object in the window to lock tracking to that single object.
 
 For faster tracking:
 
 ```bash
 python src/yolo_tracker.py --source 0 --tracker bytetrack.yaml
+```
+
+To draw every detected object instead:
+
+```bash
+python src/yolo_tracker.py --source 0 --tracker botsort.yaml --all
 ```
 
 ## Run With A Video
@@ -76,6 +82,8 @@ python src/tracker_app.py --tracker csrt
 
 For `yolo_tracker.py`:
 
+- Click an object to track only that object.
+- Press `r` to reset and choose another object.
 - Press `q` to quit.
 
 For `tracker_app.py`:

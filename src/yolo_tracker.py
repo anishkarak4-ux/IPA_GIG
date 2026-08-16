@@ -32,6 +32,11 @@ def parse_args():
     parser.add_argument("--output", default="data/output/yolo_tracked_output.avi", help="Annotated output video.")
     parser.add_argument("--metrics", default="data/output/yolo_tracking_metrics.csv", help="Tracking metrics CSV.")
     parser.add_argument("--no-save", action="store_true", help="Do not save output video or CSV.")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Track and draw all detected objects instead of selecting one.",
+    )
     return parser.parse_args()
 
 
@@ -64,6 +69,12 @@ def draw_track(frame, track_id, class_name, conf, xyxy, trail, path_length):
         cv2.line(frame, points[index - 1], points[index], (255, 140, 0), 2)
 
 
+def point_in_box(point, xyxy):
+    x, y = point
+    x1, y1, x2, y2 = [int(v) for v in xyxy]
+    return x1 <= x <= x2 and y1 <= y <= y2
+
+
 def main():
     args = parse_args()
     source = normalize_source(args.source)
@@ -78,6 +89,17 @@ def main():
     trails = defaultdict(lambda: deque(maxlen=80))
     path_lengths = defaultdict(float)
     last_centers = {}
+    selected_track_id = None
+    pending_click = None
+
+    def on_mouse(event, x, y, flags, userdata):
+        nonlocal pending_click
+        if event == cv2.EVENT_LBUTTONDOWN:
+            pending_click = (x, y)
+
+    window_name = "YOLO Object Tracking"
+    cv2.namedWindow(window_name)
+    cv2.setMouseCallback(window_name, on_mouse)
 
     results = model.track(
         source=source,
@@ -102,6 +124,8 @@ def main():
             metrics_writer.writerow(["frame", "track_id", "class", "confidence", "x1", "y1", "x2", "y2", "center_x", "center_y", "path_px"])
 
         boxes = result.boxes
+        detections = []
+
         if boxes is not None and boxes.id is not None:
             ids = boxes.id.cpu().numpy().astype(int)
             classes = boxes.cls.cpu().numpy().astype(int)
@@ -109,6 +133,22 @@ def main():
             xyxys = boxes.xyxy.cpu().numpy()
 
             for track_id, class_id, conf, xyxy in zip(ids, classes, confs, xyxys):
+                detections.append((track_id, class_id, conf, xyxy))
+
+            if pending_click is not None and not args.all:
+                for track_id, _, _, xyxy in detections:
+                    if point_in_box(pending_click, xyxy):
+                        selected_track_id = track_id
+                        trails.clear()
+                        path_lengths.clear()
+                        last_centers.clear()
+                        break
+                pending_click = None
+
+            for track_id, class_id, conf, xyxy in detections:
+                if selected_track_id is not None and track_id != selected_track_id and not args.all:
+                    continue
+
                 center = center_of_xyxy(xyxy)
                 if track_id in last_centers:
                     path_lengths[track_id] += distance(last_centers[track_id], center)
@@ -129,15 +169,25 @@ def main():
                         f"{path_lengths[track_id]:.2f}",
                     ])
 
-        cv2.putText(frame, f"YOLO + {args.tracker}", (12, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (20, 20, 20), 4)
-        cv2.putText(frame, f"YOLO + {args.tracker}", (12, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (245, 245, 245), 2)
-        cv2.imshow("YOLO Object Tracking", frame)
+        status = f"Selected ID: {selected_track_id}" if selected_track_id is not None else "Click an object to lock tracking"
+        if args.all:
+            status = "Tracking all objects"
+        header = f"YOLO + {args.tracker} | {status} | q=quit r=reset"
+        cv2.putText(frame, header, (12, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (20, 20, 20), 4)
+        cv2.putText(frame, header, (12, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (245, 245, 245), 2)
+        cv2.imshow(window_name, frame)
 
         if writer is not None:
             writer.write(frame)
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
             break
+        if key == ord("r"):
+            selected_track_id = None
+            trails.clear()
+            path_lengths.clear()
+            last_centers.clear()
 
         frame_index += 1
 
