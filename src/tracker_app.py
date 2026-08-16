@@ -15,6 +15,8 @@ TRACKER_BUILDERS = {
     "mosse": "TrackerMOSSE_create",
 }
 
+DEFAULT_REDETECT_THRESHOLD = 0.62
+
 
 def create_tracker(name):
     name = name.lower()
@@ -58,6 +60,12 @@ def parse_args():
         help="Path for per-frame tracking metrics CSV.",
     )
     parser.add_argument("--no-save", action="store_true", help="Run without saving output files.")
+    parser.add_argument(
+        "--redetect-threshold",
+        type=float,
+        default=DEFAULT_REDETECT_THRESHOLD,
+        help="Template-match score needed to reacquire a lost object. Lower is more sensitive.",
+    )
     return parser.parse_args()
 
 
@@ -76,6 +84,33 @@ def bbox_center(bbox):
 
 def distance_between(a, b):
     return math.hypot(a[0] - b[0], a[1] - b[1])
+
+
+def make_template(frame, bbox):
+    x, y, w, h = [int(v) for v in bbox]
+    roi = frame[y : y + h, x : x + w]
+    if roi.size == 0:
+        raise RuntimeError("Selected ROI is empty.")
+    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    return cv2.equalizeHist(gray)
+
+
+def try_redetect(frame, template, threshold):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.equalizeHist(gray)
+    template_h, template_w = template.shape[:2]
+
+    if gray.shape[0] < template_h or gray.shape[1] < template_w:
+        return False, None, 0.0
+
+    result = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
+    _, score, _, location = cv2.minMaxLoc(result)
+
+    if score < threshold:
+        return False, None, score
+
+    x, y = location
+    return True, (x, y, template_w, template_h), score
 
 
 def draw_overlay(frame, bbox, tracker_name, success, fps, points, distance):
@@ -122,6 +157,7 @@ def main():
         raise RuntimeError("No region selected. Select an object ROI to begin tracking.")
 
     tracker.init(frame, bbox)
+    template = make_template(frame, bbox)
 
     writer = None
     metrics_file = None
@@ -158,6 +194,13 @@ def main():
         fps = 1.0 / elapsed if elapsed > 0 else 0.0
 
         success, bbox = tracker.update(frame)
+        if not success:
+            reacquired, new_bbox, _ = try_redetect(frame, template, args.redetect_threshold)
+            if reacquired:
+                bbox = new_bbox
+                tracker = create_tracker(args.tracker)
+                tracker.init(frame, bbox)
+                success = True
         center = ("", "")
         row_bbox = ("", "", "", "")
 
@@ -184,6 +227,7 @@ def main():
             if bbox != (0, 0, 0, 0):
                 tracker = create_tracker(args.tracker)
                 tracker.init(frame, bbox)
+                template = make_template(frame, bbox)
                 points = [bbox_center(bbox)]
                 total_distance = 0.0
 

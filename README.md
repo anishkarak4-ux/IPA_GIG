@@ -10,6 +10,7 @@ The application lets a user select an object in a video or webcam stream, tracks
 - Object tracking using CSRT, KCF, MIL, or MOSSE
 - Bounding box and centroid visualization
 - Motion trail / trajectory plotting
+- Automatic template-based re-detection after tracker loss
 - FPS display
 - Per-frame tracking metrics export
 - Annotated video export
@@ -39,6 +40,14 @@ Use `opencv-contrib-python`, not plain `opencv-python`, because OpenCV trackers 
 ```bash
 python src/tracker_app.py --tracker csrt
 ```
+
+If the object goes out of frame and returns, the app tries to reacquire it using the initially selected object patch. You can tune this:
+
+```bash
+python src/tracker_app.py --tracker csrt --redetect-threshold 0.55
+```
+
+Lower threshold values reacquire more easily but may lock onto the wrong object.
 
 ## Run With A Video
 
@@ -88,4 +97,3 @@ python src/tracker_app.py --no-save
 ## Project Aim
 
 To design and implement a digital image processing system that tracks a selected object in real time and analyzes its motion trajectory using classical computer vision methods.
-
