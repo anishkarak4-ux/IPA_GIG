@@ -1,0 +1,59 @@
+# Configuration for Object Tracking System
+
+# YOLO Tracker Configuration
+yolo_tracker:
+  source: "0"  # Webcam index, video path, or URL
+  model: "yolov8n.pt"
+  tracker: "botsort.yaml"  # Options: botsort.yaml, bytetrack.yaml
+  conf: 0.25
+  output: "data/output/yolo_tracked_output.avi"
+  metrics: "data/output/yolo_tracking_metrics.csv"
+  no_save: false
+  track_all: false
+  mirror: true
+  preprocess: false
+  trail_length: 80
+  fps_avg: 30
+
+# Classical Tracker Configuration
+classical_tracker:
+  video: null  # Path to video file, null for webcam
+  tracker: "csrt"  # Options: csrt, kcf, mil, mosse
+  output: "data/output/tracked_output.avi"
+  metrics: "data/output/tracking_metrics.csv"
+  no_save: false
+  redetect_threshold: 0.62
+  mirror: true
+  preprocess: false
+  trail_length: 100
+  fps_avg: 30
+
+# Calibration Configuration (for real-world distance)
+calibration:
+  enabled: false
+  reference_object_width_m: 0.0  # Width of reference object in meters
+  reference_object_width_px: 0    # Width of reference object in pixels
+  camera_height_m: 0.0            # Camera height from ground in meters
+  camera_angle_deg: 0.0           # Camera tilt angle in degrees
+
+# Visualization Configuration
+visualization:
+  show_fps: true
+  show_trail: true
+  show_bbox: true
+  show_centroid: true
+  trail_thickness: 2
+  bbox_thickness: 2
+  font_scale: 0.6
+  colors:
+    bbox: [40, 180, 80]
+    centroid: [255, 140, 0]
+    trail: [255, 140, 0]
+    text_bg: [20, 20, 20]
+    text_fg: [245, 245, 245]
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "data/output/tracking.log"

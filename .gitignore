@@ -17,3 +17,8 @@ data/output/*
 *.mov
 *.mkv
 *.csv
+*.pt
+models/*.pt
+*.log
+scratch/
+/tracking_metrics_plot.png
