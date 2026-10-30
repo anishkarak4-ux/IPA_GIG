@@ -2,10 +2,10 @@
 
 Responsibilities:
     - Thread-safe CSV logging of per-frame tracking telemetry.
-    - Structured persistence of DIP snapshot analysis evaluations.
+    - Structured persistence of DIP snapshot analysis evaluations across Units I-VII.
     - Unified schema handling both Classical and YOLO trackers without fabricated fields.
     - Explicit session identification to distinguish runs across time.
-    - Strict data integrity without duplicating telemetry calculations or modifying analytical data.
+    - Strict data integrity without duplicating telemetry calculations.
 """
 
 import csv
@@ -67,6 +67,20 @@ SNAPSHOT_CSV_HEADER: list[str] = [
     "centroid_x",
     "centroid_y",
     "contour_count",
+    "extent",
+    "orientation_deg",
+    "polygon_vertices",
+    "hu_phi1",
+    "hu_phi2",
+    "hu_phi3",
+    "glcm_contrast",
+    "glcm_homogeneity",
+    "shannon_entropy",
+    "rle_compression_ratio",
+    "mean_intensity",
+    "std_intensity",
+    "skewness",
+    "kurtosis",
 ]
 
 
@@ -80,15 +94,7 @@ class MetricsLogger:
         session_id: str | None = None,
         overwrite: bool = False,
     ) -> None:
-        """Initialize MetricsLogger.
-
-        Args:
-            tracking_csv_path: Target path for per-frame tracking telemetry CSV.
-            snapshot_csv_path: Target path for snapshot DIP evaluation CSV.
-            session_id: Optional unique run identifier (default: ISO timestamp).
-            overwrite: If True, truncates existing CSV files on initialization.
-                       If False, appends to existing files preserving historical data.
-        """
+        """Initialize MetricsLogger."""
         self.tracking_csv_path = Path(tracking_csv_path)
         self.snapshot_csv_path = Path(snapshot_csv_path)
         self.session_id = session_id or datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -141,28 +147,10 @@ class MetricsLogger:
         timestamp: float | None = None,
         session_id: str | None = None,
     ) -> None:
-        """Log a single frame of tracking telemetry.
-
-        Args:
-            frame_index: Sequential frame number.
-            tracker_name: Active algorithm name.
-            success: Whether target was successfully tracked in this frame.
-            bbox: Bounding box tuple (x, y, w, h) or None.
-            center: Target centroid tuple (cx, cy) or None.
-            step_distance: Euclidean displacement from previous frame.
-            cumulative_distance: Cumulative traveled path length up to this frame.
-            fps: Smoothed frame processing rate.
-            velocity: Instantaneous speed.
-            confidence: Detection confidence (YOLO or template NCC score).
-            track_id: Active track ID if multi-object tracking.
-            class_name: Target semantic classification.
-            timestamp: Capture epoch timestamp.
-            session_id: Optional session override.
-        """
-        ts_val = f"{timestamp:.4f}" if timestamp is not None else f"{time.time():.4f}"
+        """Log a single frame of tracking telemetry."""
+        ts = timestamp if timestamp is not None else time.time()
         sess = session_id or self.session_id
 
-        # Format coordinates
         if bbox is not None and len(bbox) >= 4:
             x, y, w, h = [int(v) for v in bbox[:4]]
             x_str, y_str, w_str, h_str = str(x), str(y), str(w), str(h)
@@ -170,18 +158,19 @@ class MetricsLogger:
             x_str, y_str, w_str, h_str = "", "", "", ""
 
         if center is not None and len(center) >= 2:
-            cx_str, cy_str = str(int(center[0])), str(int(center[1]))
+            cx_str = str(int(center[0]))
+            cy_str = str(int(center[1]))
         else:
             cx_str, cy_str = "", ""
 
-        conf_str = f"{confidence:.4f}" if confidence is not None and confidence > 0.0 else ""
-        track_id_str = str(int(track_id)) if track_id is not None else ""
-        class_str = str(class_name) if class_name is not None else ""
         vel_str = f"{velocity:.2f}" if velocity is not None else ""
+        conf_str = f"{confidence:.4f}" if confidence is not None else ""
+        track_id_str = str(track_id) if track_id is not None else ""
+        class_str = class_name or ""
 
         row = [
             frame_index,
-            ts_val,
+            f"{ts:.4f}",
             sess,
             tracker_name,
             1 if success else 0,
@@ -239,15 +228,7 @@ class MetricsLogger:
         tracking_result: TrackingResult | None = None,
         session_id: str | None = None,
     ) -> None:
-        """Log quantitative diagnostic measurements from a completed DIPResult snapshot.
-
-        Reads values directly from DIPResult and ContourMetrics without recalculating them.
-
-        Args:
-            dip_result: Output from DIPPipeline.process().
-            tracking_result: Optional TrackingResult for target classification/confidence.
-            session_id: Optional session override.
-        """
+        """Log quantitative diagnostic measurements across Units I-VII from a DIPResult snapshot."""
         if dip_result is None or dip_result.context is None:
             return
 
@@ -273,6 +254,22 @@ class MetricsLogger:
         cx_str = str(metrics.centroid[0]) if metrics.centroid is not None else ""
         cy_str = str(metrics.centroid[1]) if metrics.centroid is not None else ""
 
+        # Enriched descriptors
+        hu = metrics.hu_moments or []
+        hu1 = f"{hu[0]:.4f}" if len(hu) > 0 else ""
+        hu2 = f"{hu[1]:.4f}" if len(hu) > 1 else ""
+        hu3 = f"{hu[2]:.4f}" if len(hu) > 2 else ""
+
+        glcm = metrics.glcm_features or {}
+        glcm_cont = f"{glcm.get('contrast', 0):.3f}"
+        glcm_homo = f"{glcm.get('homogeneity', 0):.3f}"
+
+        stats = dip_result.histogram_stats or {}
+        mu_str = f"{stats.get('mean', 0):.2f}"
+        std_str = f"{stats.get('std_dev', 0):.2f}"
+        skew_str = f"{stats.get('skewness', 0):.3f}"
+        kurt_str = f"{stats.get('kurtosis', 0):.3f}"
+
         row = [
             ctx.frame_index,
             f"{ctx.timestamp:.4f}",
@@ -296,6 +293,20 @@ class MetricsLogger:
             cx_str,
             cy_str,
             metrics.contour_count,
+            f"{metrics.extent:.4f}",
+            f"{metrics.orientation_deg:.2f}",
+            metrics.polygon_vertices,
+            hu1,
+            hu2,
+            hu3,
+            glcm_cont,
+            glcm_homo,
+            f"{dip_result.shannon_entropy:.3f}",
+            f"{dip_result.rle_compression_ratio:.2f}",
+            mu_str,
+            std_str,
+            skew_str,
+            kurt_str,
         ]
 
         with self._lock:

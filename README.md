@@ -21,24 +21,23 @@ At any moment during live tracking, pressing the `SPACE` key freezes execution a
 ```
 VIDEO STREAM (Webcam / File)
       ↓
-OBJECT TRACKING (Classical / YOLOv8)
+OBJECT TRACKING (Classical CSRT/KCF/MIL/MOSSE or YOLOv8 BoT-SORT/ByteTrack)
       ↓
 LIVE TELEMETRY & TRAJECTORY HUD (Breadcrumbs, Speed, Single-Sum Distance)
       ↓
 [SPACE KEY PRESSED]
       ↓
-FREEZE + CAPTURE DUAL SNAPSHOT (Full Frame + Tracked Target ROI)
+FREEZE + CAPTURE DUAL SNAPSHOT (Full Frame Context + Tracked Target ROI)
       ↓
-MODAL DIP INSPECTION CANVAS (6 Specialized Diagnostic Viewports)
-      ├── 1. Full Frame Context
-      ├── 2. Target ROI (Original vs Equalized)
-      ├── 3. 256-Bin Intensity Histogram & CDF Curves
-      ├── 4. Spatial Denoising (Gaussian/Median) & Differential Edges (Sobel/Canny)
-      ├── 5. Optimal Global Segmentation (Otsu) & Morphology (Open/Close)
-      └── 6. Contour Extraction & Academic Shape Descriptors (Area, Circularity, Solidity)
+MODAL DIP INSPECTION CANVAS (5 Thematic Syllabus Tabs & 6 Panels per Tab)
+      ├── TAB 1: Core Spatial & Classical DIP (Raw vs CDF vs CLAHE, Hist Stats, Edges, Otsu, Contours)
+      ├── TAB 2: Frequency Domain & Restoration (2D FFT Mag/Phase, BLPF, GHPF, Homomorphic, Wiener vs 2D Block DCT)
+      ├── TAB 3: Color Spaces & Advanced Segmentation (HSV/Lab/YCbCr, JET Pseudo-Color, K-Means, Watershed, Top-Hat)
+      ├── TAB 4: Morphometric & Feature Descriptors (Distances L2/D4/D8, Bit-Planes, Skeleton vs LBP, Hu Moments φ1-φ7)
+      └── TAB 5: Noise & Degradation Lab (6 Models: Clean, Gaussian, Salt/Pepper, Rayleigh, Uniform, Periodic + PSNR/MSE)
       ↓
+[E KEY] → EXPORT SINGLE-CLICK ACADEMIC HTML LAB REPORT (KaTeX Math + Embedded Canvases)
 [S KEY] → SAVE COMPOSITE CANVAS PNG + LOG DIAGNOSTICS TO CSV
-      ↓
 [SPACE KEY] → CLOSE CANVAS & RESUME LIVE TRACKING
 ```
 
@@ -93,17 +92,20 @@ IPA_GIG/
     │   └── yolo_tracker.py        # Modular YOLOv8 + BoT-SORT / ByteTrack engine
     ├── processing/
     │   ├── dip_pipeline.py        # DIPPipeline orchestrator & SnapshotContext
-    │   ├── filters.py             # Grayscale, Histograms, Equalization, Gaussian, Median
-    │   ├── edge_detectors.py      # Sobel gradients, Laplacian, Canny hysteresis
-    │   ├── segmentation.py        # Otsu thresholding, adaptive thresholding
-    │   └── morphology_analysis.py # Morphological Open/Close, Contour metrics
+    │   ├── filters.py             # Grayscale, Histograms, Equalization, CLAHE, Point Transforms
+    │   ├── edge_detectors.py      # Sobel, Prewitt, Roberts, Laplacian, LoG, Canny hysteresis
+    │   ├── frequency.py           # 2D FFT Mag/Phase, BLPF, GHPF, Homomorphic, 2D Block DCT
+    │   ├── color_restoration.py   # Color planes (HSV/Lab/YCbCr), Noise Lab, Wiener Deblur
+    │   ├── segmentation.py        # Otsu thresholding, K-Means clustering, Watershed
+    │   └── morphology_analysis.py # Morphology (Open/Close/TopHat/Skeleton), Hu Moments, GLCM, LBP
     ├── visualization/
     │   ├── overlay.py             # Live HUD, bounding boxes, trajectory breadcrumbs
     │   ├── histogram_plotter.py   # Pure OpenCV 256-bin histogram rendering
-    │   └── inspection_canvas.py   # 6-panel composite 1280x720 modal GUI canvas
+    │   └── inspection_canvas.py   # 5-tab composite 1280x720 modal GUI canvas
     └── analytics/
         ├── metrics_logger.py      # Thread-safe telemetry & snapshot CSV persistence
-        └── plot_metrics.py        # PerformancePlotter publication dashboards
+        ├── plot_metrics.py        # PerformancePlotter publication dashboards
+        └── report_generator.py    # Automated standalone academic HTML lab report generator
 ```
 
 ---

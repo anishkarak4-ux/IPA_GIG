@@ -1,7 +1,13 @@
 """Digital Image Processing (DIP) package.
 
-Provides modular spatial filtering, edge detection, segmentation,
-morphological analysis, and end-to-end snapshot pipeline orchestration.
+Provides comprehensive modular processing routines across Syllabus Units I to VII:
+    - Filters & Point Transforms (SpatialFilterSuite)
+    - Gradient & Edge Detectors (EdgeDetectorSuite)
+    - Segmentation, Clustering & Distance Transforms (SegmentationSuite)
+    - Morphology & Geometric Descriptors (MorphologyAnalyzer)
+    - Frequency Domain Fourier Analysis (compute_fft2_spectrum, apply_frequency_filter)
+    - Color Spaces, Restoration & Information Theory (decompose_color_spaces, restore_motion_blur)
+    - Unified Snapshot Pipeline (DIPPipeline, DIPResult, SnapshotContext)
 """
 
 from .dip_pipeline import (
@@ -15,25 +21,48 @@ from .edge_detectors import (
     EdgeDetectorSuite,
     apply_canny,
     apply_laplacian,
+    apply_log,
+    apply_prewitt,
+    apply_roberts,
     apply_sobel,
     compute_sobel,
 )
 from .filters import (
     SpatialFilterSuite,
+    apply_alpha_trimmed_mean,
     apply_bilateral_filter,
+    apply_box_filter,
+    apply_contrast_stretching,
+    apply_gamma_transform,
     apply_gaussian_blur,
+    apply_image_negative,
+    apply_log_transform,
+    apply_max_filter,
     apply_median_filter,
+    apply_midpoint_filter,
+    apply_min_filter,
+    apply_unsharp_mask,
     compute_histogram,
+    compute_histogram_statistics,
     convert_to_grayscale,
     equalize_histogram,
+    extract_bit_planes,
+    simulate_quantization,
 )
 from .morphology_analysis import (
     MorphologyAnalyzer,
+    apply_blackhat,
     apply_closing,
     apply_dilation,
     apply_erosion,
+    apply_hole_filling,
+    apply_morphological_boundary,
     apply_morphological_gradient,
     apply_opening,
+    apply_skeletonization,
+    apply_tophat,
+    compute_chain_code,
+    compute_glcm_features,
     extract_contour_metrics,
     get_structuring_element,
 )
@@ -41,7 +70,26 @@ from .segmentation import (
     SegmentationSuite,
     apply_adaptive_threshold,
     apply_binary_threshold,
+    apply_kmeans_segmentation,
     apply_otsu,
+    apply_watershed_segmentation,
+    compute_distance_transforms,
+)
+from .frequency import (
+    apply_frequency_filter,
+    apply_homomorphic_filter,
+    compute_fft2_spectrum,
+    make_frequency_filter_mask,
+)
+from .color_restoration import (
+    apply_pseudocolor,
+    compute_rle_compression_ratio,
+    compute_shannon_entropy,
+    decompose_color_spaces,
+    equalize_color_image,
+    inject_noise,
+    make_motion_psf,
+    restore_motion_blur,
 )
 
 __all__ = [
@@ -53,19 +101,38 @@ __all__ = [
     "SpatialFilterSuite",
     "convert_to_grayscale",
     "compute_histogram",
+    "compute_histogram_statistics",
     "equalize_histogram",
+    "apply_gamma_transform",
+    "apply_log_transform",
+    "apply_image_negative",
+    "apply_contrast_stretching",
+    "extract_bit_planes",
+    "simulate_quantization",
     "apply_gaussian_blur",
     "apply_median_filter",
     "apply_bilateral_filter",
+    "apply_box_filter",
+    "apply_min_filter",
+    "apply_max_filter",
+    "apply_midpoint_filter",
+    "apply_alpha_trimmed_mean",
+    "apply_unsharp_mask",
     "EdgeDetectorSuite",
     "compute_sobel",
     "apply_sobel",
+    "apply_roberts",
+    "apply_prewitt",
     "apply_laplacian",
+    "apply_log",
     "apply_canny",
     "SegmentationSuite",
     "apply_otsu",
     "apply_adaptive_threshold",
     "apply_binary_threshold",
+    "compute_distance_transforms",
+    "apply_kmeans_segmentation",
+    "apply_watershed_segmentation",
     "MorphologyAnalyzer",
     "get_structuring_element",
     "apply_erosion",
@@ -73,5 +140,24 @@ __all__ = [
     "apply_opening",
     "apply_closing",
     "apply_morphological_gradient",
+    "apply_tophat",
+    "apply_blackhat",
+    "apply_morphological_boundary",
+    "apply_hole_filling",
+    "apply_skeletonization",
     "extract_contour_metrics",
+    "compute_chain_code",
+    "compute_glcm_features",
+    "compute_fft2_spectrum",
+    "apply_frequency_filter",
+    "apply_homomorphic_filter",
+    "make_frequency_filter_mask",
+    "decompose_color_spaces",
+    "equalize_color_image",
+    "apply_pseudocolor",
+    "inject_noise",
+    "restore_motion_blur",
+    "make_motion_psf",
+    "compute_shannon_entropy",
+    "compute_rle_compression_ratio",
 ]

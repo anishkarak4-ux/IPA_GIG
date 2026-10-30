@@ -46,6 +46,7 @@ try:
     from src.visualization.inspection_canvas import InspectionCanvas
     from src.analytics.metrics_logger import MetricsLogger
     from src.analytics.plot_metrics import PerformancePlotter
+    from src.analytics.report_generator import HTMLReportGenerator
 except ImportError:
     from config_loader import AppConfig, load_config, merge_args_with_config, setup_logging
     from core.input_manager import FramePacket, VideoSource, normalize_source
@@ -58,6 +59,7 @@ except ImportError:
     from visualization.inspection_canvas import InspectionCanvas
     from analytics.metrics_logger import MetricsLogger
     from analytics.plot_metrics import PerformancePlotter
+    from analytics.report_generator import HTMLReportGenerator
 
 logger = logging.getLogger("ipa_main")
 
@@ -357,14 +359,20 @@ def run_inspection_modal(
 
     window_name = "IPA DIP Inspection Canvas"
     active_stage: int | None = None
+    active_tab: int = 1
     save_notification: str | None = None
 
     if headless:
-        # In headless automated mode, generate canvas, test save, and return
-        canvas = canvas_engine.render(dip_result, tracking_result, active_stage=active_stage)
+        # In headless automated mode, generate canvas across tabs, test save, and return
+        canvas = canvas_engine.render(dip_result, tracking_result, active_stage=active_stage, active_tab=active_tab)
         save_snapshot_artifacts(
             context, dip_result, canvas, metrics_logger, snapshots_dir, tracking_result
         )
+        try:
+            report_gen = HTMLReportGenerator(output_dir=snapshots_dir / "reports")
+            report_gen.generate(dip_result, context, canvas_engine, tracking_result)
+        except Exception as e:
+            logger.warning("Headless report generation skipped: %s", e)
         logger.info("=== HEADLESS MODAL DIP INSPECTION FINISHED ===")
         return
 
@@ -373,8 +381,10 @@ def run_inspection_modal(
 
     try:
         while True:
-            # Render composite 6-panel canvas
-            canvas = canvas_engine.render(dip_result, tracking_result, active_stage=active_stage)
+            # Render composite multi-panel canvas for active tab
+            canvas = canvas_engine.render(
+                dip_result, tracking_result, active_stage=active_stage, active_tab=active_tab
+            )
 
             if save_notification:
                 # Flash save confirmation on footer
@@ -399,7 +409,25 @@ def run_inspection_modal(
             elif key in (27, ord("q"), ord("Q")):  # ESC / Q: Exit modal inspection
                 logger.info("Closing modal inspection canvas.")
                 break
-            elif key in (ord("s"), ord("S")):  # S: Save analysis
+            elif key in (9, ord("t"), ord("T")):  # TAB / T: Cycle through 5 syllabus view tabs
+                active_tab = (active_tab % 5) + 1
+                active_stage = None
+                logger.info("Switched to DIP Inspection Canvas Tab %d/5: %s", active_tab, InspectionCanvas.TAB_NAMES.get(active_tab, ''))
+            elif key in (ord("e"), ord("E")):  # E: Export Academic HTML Lab Report
+                try:
+                    report_gen = HTMLReportGenerator(output_dir=snapshots_dir / "reports")
+                    saved_report = report_gen.generate(
+                        dip_result=dip_result,
+                        context=context,
+                        canvas_engine=canvas_engine,
+                        tracking_result=tracking_result,
+                    )
+                    save_notification = f"REPORT EXPORTED: {saved_report.name}"
+                    logger.info("Exported academic laboratory HTML report to: %s", saved_report)
+                except Exception as ex:
+                    logger.error("Failed to generate HTML report: %s", ex, exc_info=True)
+                    save_notification = "REPORT EXPORT FAILED"
+            elif key in (ord("s"), ord("S")):  # S: Save analysis snapshot
                 saved_path = save_snapshot_artifacts(
                     context, dip_result, canvas, metrics_logger, snapshots_dir, tracking_result
                 )
@@ -446,12 +474,25 @@ def run_tracking_app(args: argparse.Namespace) -> int:
         config.classical_tracker.trail_length if args.mode == "classical" else config.yolo_tracker.trail_length
     ) or default_trail
 
-    output_video_path = Path(args.output or (
-        config.classical_tracker.output if args.mode == "classical" else config.yolo_tracker.output
-    ))
-    tracking_csv_path = Path(args.metrics or (
-        config.classical_tracker.metrics if args.mode == "classical" else config.yolo_tracker.metrics
-    ))
+    # Determine if live webcam capture to avoid clobbering reference benchmark files
+    is_live_capture = isinstance(source, int) or (isinstance(source, str) and source.isdigit())
+
+    if is_live_capture and args.output is None:
+        prefix = "live" if args.mode == "classical" else "yolo_live"
+        output_video_path = Path(f"data/output/{prefix}_tracked_output.avi")
+    else:
+        output_video_path = Path(args.output or (
+            config.classical_tracker.output if args.mode == "classical" else config.yolo_tracker.output
+        ))
+
+    if is_live_capture and args.metrics is None:
+        prefix = "live" if args.mode == "classical" else "yolo_live"
+        tracking_csv_path = Path(f"data/output/{prefix}_tracking_metrics.csv")
+    else:
+        tracking_csv_path = Path(args.metrics or (
+            config.classical_tracker.metrics if args.mode == "classical" else config.yolo_tracker.metrics
+        ))
+
     snapshot_csv_path = Path(args.snapshot_metrics)
     snapshots_dir = Path(args.snapshots_dir)
 
@@ -498,7 +539,15 @@ def run_tracking_app(args: argparse.Namespace) -> int:
 
     if not args.headless:
         cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
-        cv2.setMouseCallback(window_name, on_mouse)
+        if args.mode == "yolo":
+            cv2.setMouseCallback(window_name, on_mouse)
+
+    # Warm up camera sensor if live capture source
+    is_live_cam = isinstance(source, int) or (isinstance(source, str) and (source.isdigit() or source.startswith("/dev/video")))
+    if is_live_cam:
+        logger.info("Warming up camera sensor for auto-exposure stabilization...")
+        for _ in range(5):
+            video_source.read_frame()
 
     # Read first frame for tracker setup
     ok, first_packet = video_source.read_frame()
@@ -534,12 +583,28 @@ def run_tracking_app(args: argparse.Namespace) -> int:
                 logger.warning("Invalid --init-roi '%s': %s", args.init_roi, e)
 
         if init_bbox is None and not args.headless:
-            logger.info("Prompting user for ROI selection via OpenCV selectROI...")
-            selected = cv2.selectROI(window_name, first_frame, fromCenter=False, showCrosshair=True)
-            if selected != (0, 0, 0, 0):
+            logger.info("=" * 60)
+            logger.info("INTERACTIVE ROI SELECTION:")
+            logger.info("1. Click & drag a rectangle around the object to track.")
+            logger.info("2. Press SPACE or ENTER to confirm your selection.")
+            logger.info("   (Or press 'c' / ESC to skip; you can press 'S' anytime later)")
+            logger.info("=" * 60)
+            prompt_frame = first_frame.copy()
+            cv2.putText(
+                prompt_frame,
+                "DRAG BOX AROUND OBJECT -> PRESS SPACE/ENTER TO CONFIRM",
+                (15, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.62,
+                (0, 255, 255),
+                2,
+                cv2.LINE_AA,
+            )
+            selected = cv2.selectROI(window_name, prompt_frame, fromCenter=False, showCrosshair=True)
+            if selected != (0, 0, 0, 0) and selected[2] > 0 and selected[3] > 0:
                 init_bbox = (int(selected[0]), int(selected[1]), int(selected[2]), int(selected[3]))
             else:
-                logger.warning("No ROI selected by user. Tracking will be uninitialized.")
+                logger.warning("No ROI selected at startup. Press 'S' during tracking to select a target.")
 
         if init_bbox is not None:
             tracker.init(first_frame, init_bbox)
@@ -549,7 +614,7 @@ def run_tracking_app(args: argparse.Namespace) -> int:
             logger.info("Classical tracker successfully initialized on bbox: %s", init_bbox)
 
     # 5. Live Tracking Loop
-    logger.info("Starting live tracking loop. Controls: [SPACE] Snapshot DIP, [R] Reset, [Q] Quit")
+    logger.info("Starting live tracking loop. Controls: [SPACE] Snapshot DIP, [S] Select Box, [R] Reset, [Q] Quit")
     current_packet: FramePacket | None = first_packet
     frame_count = 0
     t_loop_start = time.perf_counter()
@@ -567,11 +632,17 @@ def run_tracking_app(args: argparse.Namespace) -> int:
 
             # Handle mouse clicks for YOLO target selection
             if pending_click is not None:
-                if args.mode == "yolo" and isinstance(tracker, YOLOTracker):
-                    locked_id = tracker.select_target_by_point(pending_click, frame)
+                if args.mode == "yolo":
+                    locked_id = None
+                    if hasattr(tracker, "select_target_by_point"):
+                        locked_id = tracker.select_target_by_point(pending_click, frame)
+                    elif hasattr(tracker, "select_target_at"):
+                        locked_id = tracker.select_target_at(pending_click)
                     if locked_id is not None:
                         logger.info("Mouse clicked %s: Locked YOLO track ID %d", pending_click, locked_id)
                         telemetry_tracker.reset()
+                    else:
+                        logger.info("Mouse clicked %s: No detected object at click coordinates", pending_click)
                 pending_click = None
 
             # A. Update Tracker
@@ -603,7 +674,7 @@ def run_tracking_app(args: argparse.Namespace) -> int:
                 mirror=video_source.mirror,
                 preprocess=args.preprocess,
                 calibration_enabled=config.calibration.enabled,
-                extra_lines=["Controls: [SPACE] DIP Inspect  |  [R] Reset  |  [Q] Quit"],
+                extra_lines=["Controls: [SPACE] DIP Inspect  |  [S] Select Box  |  [E] Export Report  |  [R] Reset  |  [Q] Quit"],
             )
 
             # D. Log per-frame telemetry to CSV
@@ -652,6 +723,30 @@ def run_tracking_app(args: argparse.Namespace) -> int:
                     logger.info("User requested exit via keyboard.")
                     break
                 elif key == 32:  # SPACE: Modal DIP Inspection!
+                    # If target is not currently locked or was not selected, prompt user to select ROI
+                    if not tracking_result.success or tracking_result.bbox is None:
+                        logger.info("SPACE pressed with no active target. Prompting for ROI selection...")
+                        sel = cv2.selectROI(window_name, frame, fromCenter=False, showCrosshair=True)
+                        if sel != (0, 0, 0, 0) and sel[2] > 0 and sel[3] > 0:
+                            new_box = (int(sel[0]), int(sel[1]), int(sel[2]), int(sel[3]))
+                            if args.mode == "classical":
+                                tracker.init(frame, new_box)
+                            elif hasattr(tracker, "initialize"):
+                                tracker.initialize(frame, new_box)
+                            telemetry_tracker.reset()
+                            telemetry_tracker.set_initial_center((new_box[0] + new_box[2] // 2, new_box[1] + new_box[3] // 2))
+                            tracking_result = TrackingResult(
+                                success=True,
+                                bbox=new_box,
+                                center=(new_box[0] + new_box[2] // 2, new_box[1] + new_box[3] // 2),
+                                confidence=1.0,
+                                track_id=1,
+                                class_name="target",
+                            )
+                        else:
+                            logger.info("No ROI selected; skipping DIP inspection.")
+                            continue
+
                     logger.info("SPACE pressed: Pausing tracking and entering DIP inspection modal.")
                     snapshot_ctx = build_snapshot_context(
                         current_packet, tracking_result, telemetry, tracker_name_str
@@ -665,13 +760,42 @@ def run_tracking_app(args: argparse.Namespace) -> int:
                         snapshots_dir=snapshots_dir,
                         headless=False,
                     )
+                elif key in (ord("e"), ord("E")):  # E: Instant HTML Lab Report export
+                    if tracking_result.success and tracking_result.bbox is not None:
+                        logger.info("E pressed: Exporting academic lab report for frame %d...", f_idx)
+                        snapshot_ctx = build_snapshot_context(
+                            current_packet, tracking_result, telemetry, tracker_name_str
+                        )
+                        dip_res = dip_pipeline.process(snapshot_ctx)
+                        report_gen = HTMLReportGenerator(output_dir=snapshots_dir / "reports")
+                        rep_path = report_gen.generate(
+                            dip_result=dip_res,
+                            context=snapshot_ctx,
+                            canvas_engine=canvas_engine,
+                            tracking_result=tracking_result,
+                        )
+                        logger.info("Academic lab report exported to: %s", rep_path)
+                    else:
+                        logger.warning("E pressed but no target is actively tracked. Press 'S' to select a target first.")
+                elif key in (ord("s"), ord("S")):  # S: Interactive ROI selection
+                    logger.info("S pressed: Interactive target selection...")
+                    sel = cv2.selectROI(window_name, frame, fromCenter=False, showCrosshair=True)
+                    if sel != (0, 0, 0, 0) and sel[2] > 0 and sel[3] > 0:
+                        new_box = (int(sel[0]), int(sel[1]), int(sel[2]), int(sel[3]))
+                        if args.mode == "classical":
+                            tracker.init(frame, new_box)
+                        elif hasattr(tracker, "initialize"):
+                            tracker.initialize(frame, new_box)
+                        telemetry_tracker.reset()
+                        telemetry_tracker.set_initial_center((new_box[0] + new_box[2] // 2, new_box[1] + new_box[3] // 2))
+                        logger.info("Re-initialized tracking on user selected ROI: %s", new_box)
                 elif key in (ord("r"), ord("R")):  # R: Reset
                     logger.info("Resetting tracker and telemetry.")
                     tracker.reset()
                     telemetry_tracker.reset()
                     if args.mode == "classical":
                         sel = cv2.selectROI(window_name, frame, fromCenter=False, showCrosshair=True)
-                        if sel != (0, 0, 0, 0):
+                        if sel != (0, 0, 0, 0) and sel[2] > 0 and sel[3] > 0:
                             new_box = (int(sel[0]), int(sel[1]), int(sel[2]), int(sel[3]))
                             tracker.init(frame, new_box)
                             telemetry_tracker.set_initial_center((new_box[0] + new_box[2] // 2, new_box[1] + new_box[3] // 2))

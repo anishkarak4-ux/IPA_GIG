@@ -166,6 +166,18 @@ class YOLOTracker(BaseTracker):
                 return det.track_id
         return None
 
+    def select_target_by_point(self, point: tuple[int, int], frame: np.ndarray | None = None) -> int | None:
+        """Attempt to lock onto the detected object containing the specified (x, y) point.
+
+        Args:
+            point: (x, y) pixel coordinates.
+            frame: Optional frame parameter for API compatibility.
+
+        Returns:
+            The selected track_id if locked, or None if point does not fall within any detection.
+        """
+        return self.select_target_at(point)
+
     def select_target_by_id(self, track_id: int) -> bool:
         """Lock onto a specific track ID.
 
@@ -243,6 +255,8 @@ class YOLOTracker(BaseTracker):
 
         self._is_tracking = False
         return False
+
+    init = initialize
 
     def update(self, frame: np.ndarray) -> TrackingResult:
         """Process a frame with YOLO + BoT-SORT / ByteTrack and return TrackingResult.
