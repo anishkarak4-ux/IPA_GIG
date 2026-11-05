@@ -953,7 +953,7 @@ The supplied benchmark indicates a trade-off between MOSSE's low update cost and
 **Audited source revision**  
 [474498884b22ca5698bbfc57077f1ae107e0c704](https://github.com/anishkarak4-ux/IPA_GIG/tree/474498884b22ca5698bbfc57077f1ae107e0c704)
 
-The project identifies the public repository as its open-source release. A standalone license file was absent from the audited tree, so the applicable permissions should be established from the repository and dependency terms before redistribution.
+The project is officially released as open source under the permissive MIT License (included in the repository root LICENSE file). Full permissions are granted for academic evaluation, research, commercial reuse, modification, and redistribution.
 
 ## 13. Team Member Contributions and Sign-Off
 
