@@ -4,19 +4,32 @@
 [![OpenCV Contrib](https://img.shields.io/badge/OpenCV--Contrib-4.14.0-green.svg)](https://opencv.org/)
 [![Ultralytics YOLOv8](https://img.shields.io/badge/Ultralytics-YOLOv8n-yellow.svg)](https://github.com/ultralytics/ultralytics)
 [![Course](https://img.shields.io/badge/Course-Image%20Processing%20%26%20Applications-orange.svg)]()
+[![Repository](https://img.shields.io/badge/GitHub-IPA__GIG-181717.svg?logo=github)](https://github.com/anishkarak4-ux/IPA_GIG)
 
-A comprehensive, academic-grade application integrating real-time visual object tracking with an interactive, on-demand modal **Digital Image Processing (DIP)** inspection canvas.
+A comprehensive, academic-grade cyber-physical vision system integrating real-time visual object tracking with an interactive, on-demand modal **Digital Image Processing (DIP)** inspection workbench.
 
 ---
 
-## 1. Project Overview & Objective
+## 📑 Formal Project Documentation & Reports
 
-The primary objective is to evaluate and bridge two tracking paradigms:
-1. **Classical Correlation-Filter & Discriminative Tracking:** OpenCV CSRT, KCF, MIL, and MOSSE augmented with normalized cross-correlation (NCC) template redetection.
+The project documentation has been fully formalized according to rigorous IEEE academic standards:
+
+| Document Format | Direct Link | Description |
+| :--- | :--- | :--- |
+| 📕 **Academic PDF Report (29 Pages)** | [**`reports/Unified_Tracking_and_Modal_DIP_Inspection_IPA.pdf`**](reports/Unified_Tracking_and_Modal_DIP_Inspection_IPA.pdf) | Formal IEEE-typeset project report including full mathematical formulations, SOTA comparative analysis, figures, and team contributions sign-off. |
+| 📘 **Editable Word Document (.docx)** | [**`reports/Unified_Tracking_and_Modal_DIP_Inspection_IPA.docx`**](reports/Unified_Tracking_and_Modal_DIP_Inspection_IPA.docx) | Full Microsoft Word source file with high-resolution figures, tables, and academic formatting. |
+| 📄 **Repository Markdown Report** | [**`PROJECT_REPORT.md`**](PROJECT_REPORT.md) | In-repo searchable academic report with complete LaTeX equations, DFDs, and state diagrams. |
+
+---
+
+## 1. Project Overview & Architecture
+
+The system bridges two computer vision tracking paradigms with an in-situ image inspection laboratory:
+1. **Classical Correlation-Filter & Discriminative Tracking:** OpenCV CSRT, KCF, MIL, and MOSSE augmented with multi-scale Normalized Cross-Correlation (NCC) template re-acquisition.
 2. **Deep Learning Detection & Spatio-Temporal Association:** Ultralytics YOLOv8 nano paired with BoT-SORT (camera motion compensation + ReID) and ByteTrack (two-stage association).
 
-Crucially, the system introduces a **Unified Tracking + Modal DIP Inspection Workflow**:
-At any moment during live tracking, pressing the `SPACE` key freezes execution and captures a dual-context snapshot (**Full Frame Context + Tracked Target ROI**). The system then feeds this region of interest through a complete 8-stage image processing suite, rendering an interactive 1280×720 multi-panel diagnostic dashboard. Once analysis is inspected or saved, pressing `SPACE` immediately resumes live tracking with uninterrupted kinematic and trajectory continuity.
+### Unified Tracking + Modal DIP Inspection Workflow
+At any moment during live tracking, pressing the `SPACE` key freezes execution and captures a dual-context snapshot (**Full Frame Context + Tracked Target ROI**). The system routes this ROI into a 5-tab, multi-domain DIP inspection workbench. Once inspection is complete, pressing `SPACE` immediately resumes live tracking with uninterrupted kinematic and trajectory continuity.
 
 ```
 VIDEO STREAM (Webcam / File)
@@ -29,7 +42,7 @@ LIVE TELEMETRY & TRAJECTORY HUD (Breadcrumbs, Speed, Single-Sum Distance)
       ↓
 FREEZE + CAPTURE DUAL SNAPSHOT (Full Frame Context + Tracked Target ROI)
       ↓
-MODAL DIP INSPECTION CANVAS (5 Thematic Syllabus Tabs & 6 Panels per Tab)
+MODAL DIP INSPECTION WORKBENCH (5 Thematic Tabs & 6 Panels per Tab)
       ├── TAB 1: Core Spatial & Classical DIP (Raw vs CDF vs CLAHE, Hist Stats, Edges, Otsu, Contours)
       ├── TAB 2: Frequency Domain & Restoration (2D FFT Mag/Phase, BLPF, GHPF, Homomorphic, Wiener vs 2D Block DCT)
       ├── TAB 3: Color Spaces & Advanced Segmentation (HSV/Lab/YCbCr, JET Pseudo-Color, K-Means, Watershed, Top-Hat)
@@ -43,40 +56,171 @@ MODAL DIP INSPECTION CANVAS (5 Thematic Syllabus Tabs & 6 Panels per Tab)
 
 ---
 
-## 2. Academic Relevance to Image Processing & Applications
+## 2. Complete Step-by-Step Guide: How to Run the Application
 
-This project demonstrates core classical and modern DIP theoretical principles:
+### Step 1: Clone the Repository
+Clone the repository from GitHub and navigate to the project directory:
+```bash
+git clone https://github.com/anishkarak4-ux/IPA_GIG.git
+cd IPA_GIG
+```
 
-- **Point Operations & Radiometric Enhancement:** Probability density estimation via 256-bin intensity histograms; contrast enhancement via Cumulative Distribution Function (CDF) linearization (`cv2.equalizeHist`).
-- **Spatial Domain Noise Suppression:** Linear Gaussian low-pass spatial convolution ($5\times 5$, $\sigma=1.0$) and nonlinear rank-order Median filtering ($5\times 5$) for impulse and sensor noise reduction.
-- **Differential Edge Detection:** First-order spatial gradient operators (Sobel kernels $G_x$, $G_y$) with gradient magnitude $M(x,y) = \sqrt{G_x^2 + G_y^2}$ and directional orientation $\theta$; Canny optimal edge detection incorporating non-maximum suppression (NMS) and hysteresis thresholding.
-- **Global Thresholding:** Otsu's discriminant criterion maximizing inter-class variance $\sigma_B^2(t)$ between foreground and background intensity distributions.
-- **Mathematical Morphology:** Set-theoretic morphological Opening ($A \circ B = (A \ominus B) \oplus B$) for background noise decoupling, and Closing ($A \bullet B = (A \oplus B) \ominus B$) for interior hole filling and boundary bridging.
-- **Geometric & Morphometric Shape Descriptors:** Green's theorem contour area ($A$), perimeter arc length ($P$), aspect ratio, circularity ($C = 4\pi A / P^2$), and convex hull solidity ($S = A / A_{\text{hull}}$).
-- **Kinematic Telemetry:** Euclidean displacement calculation with strict single-sum cumulative trajectory integration $D = \sum d_i$ (eliminating double-counting errors).
+### Step 2: Create and Activate Virtual Environment
+Use Python 3.10, 3.11, or 3.12:
+
+* **Windows (PowerShell):**
+  ```powershell
+  python -m venv .venv
+  .venv\Scripts\Activate.ps1
+  ```
+* **Windows (Command Prompt):**
+  ```cmd
+  python -m venv .venv
+  .venv\Scripts\activate.bat
+  ```
+* **Linux / macOS:**
+  ```bash
+  python3 -m venv .venv
+  source .venv/bin/activate
+  ```
+
+### Step 3: Install Required Packages
+Install all project dependencies with one command:
+```bash
+pip install -r requirements.txt
+```
+
+> **IMPORTANT:** Ensure `opencv-contrib-python>=4.8,<5` is installed (included in `requirements.txt`). Do NOT install standard `opencv-python`, as it lacks the tracking algorithms (`TrackerCSRT`, `TrackerKCF`, `TrackerMOSSE`).
 
 ---
 
-## 3. System Architecture & Repository Structure
+### Step 4: Quick Start — 1-Command Launch
+
+To start tracking immediately with your default webcam:
+```bash
+python src/main.py
+```
+**What happens on launch:**
+1. A live webcam window opens with horizontal mirroring enabled (for natural webcam movement).
+2. The system prompts you to select a target object:
+   - Click and drag a bounding box over any object with your mouse.
+   - Press **`ENTER`** or **`SPACE`** to confirm the selection.
+3. The system locks onto the object with the CSRT tracker and displays live trajectory breadcrumbs, speed, and single-sum cumulative distance!
+
+---
+
+### Step 5: Full Execution Guide & Common Modes
+
+All features are accessible through the unified entry point [`src/main.py`](src/main.py):
+
+#### A. Classical Tracking Modes
+```bash
+# 1. CSRT Tracker on Webcam (Default, most robust bounding-box tracking)
+python src/main.py --mode classical --tracker csrt
+
+# 2. Ultra-fast KCF Tracker (300+ FPS)
+python src/main.py --mode classical --tracker kcf
+
+# 3. High-throughput MOSSE Tracker
+python src/main.py --mode classical --tracker mosse
+
+# 4. Classical Tracker on a Recorded Video File
+python src/main.py --mode classical --tracker csrt --source path/to/video.mp4
+
+# 5. Enable Real-Time DIP Contrast Equalization & Gaussian Smoothing Preprocessing
+python src/main.py --mode classical --tracker csrt --preprocess
+```
+
+#### B. YOLO Deep Learning Modes
+```bash
+# 1. YOLOv8n with BoT-SORT (Camera motion compensation + Re-ID, Click-to-Lock Target)
+python src/main.py --mode yolo --tracker botsort.yaml
+
+# 2. YOLOv8n with ByteTrack (High-speed two-stage association)
+python src/main.py --mode yolo --tracker bytetrack.yaml
+
+# 3. Track All Detected Objects Simultaneously (Multi-Object Tracking)
+python src/main.py --mode yolo --track-all
+
+# 4. YOLO on Video File with Custom Confidence Threshold
+python src/main.py --mode yolo --tracker botsort.yaml --source path/to/video.mp4 --conf 0.35
+```
+
+#### C. Automated / Headless Benchmarking
+```bash
+# Run headless batch benchmark over 200 frames with predefined ROI (no GUI popups)
+python src/main.py --mode classical --tracker csrt --source data/output/tracked_output.avi --init-roi 284,245,36,38 --max-frames 200 --headless
+```
+
+#### D. Generating Post-Run Performance Dashboards
+```bash
+# Automatically generate publication-quality analytics plots upon exit
+python src/main.py --mode classical --tracker csrt --plot --plot-dir data/output/analytics
+
+# Or generate plots anytime from an existing metrics CSV log:
+python src/plot_metrics.py --metrics data/output/tracking_metrics.csv
+```
+
+---
+
+## 3. Interactive Keyboard & Mouse Controls
+
+### During Live Tracking:
+
+| Key / Input | Action Description |
+| :---: | :--- |
+| **`SPACE`** | **Pause tracking & open the Modal DIP Inspection Workbench** on current target ROI. |
+| **`S`** | **Select new Target ROI** via interactive mouse crosshair (draw box, press `ENTER`). |
+| **`Mouse Click`** | **In YOLO mode:** Click on any detected object bounding box to lock tracking onto that specific target ID. |
+| **`C`** | **Toggle horizontal camera mirroring** (ON by default for natural webcam interaction). |
+| **`P`** | **Toggle DIP preprocessing** (real-time CLAHE / histogram equalization and Gaussian smoothing). |
+| **`R`** | **Reset tracker & clear trajectory history**. |
+| **`E`** | **Export Academic HTML Lab Report** instantly for the active frame. |
+| **`Q` / `ESC`** | **Quit application** and write output telemetry CSV and video files. |
+
+---
+
+### Inside Modal DIP Inspection Workbench:
+
+When you press `SPACE`, the system freezes and displays the 6-panel diagnostic canvas:
+
+| Key / Input | Action Description |
+| :---: | :--- |
+| **`T` or `TAB`** | **Cycle between all 5 Thematic DIP Tabs:**<br>• **Tab 1:** Spatial & Classical DIP (CDF vs CLAHE, Histograms, Sobel/Canny Edges, Otsu, Contours)<br>• **Tab 2:** Frequency Domain & Restoration (2D FFT Magnitude/Phase, BLPF, GHPF, Homomorphic, Wiener Filter, 2D Block DCT)<br>• **Tab 3:** Color Spaces & Advanced Segmentation (HSV, Lab, YCbCr, JET Pseudo-Color, K-Means, Watershed, Top-Hat)<br>• **Tab 4:** Morphometric & Feature Descriptors (Distances L2/D4/D8, Bit-Planes, Skeleton vs LBP, Hu Moments φ1-φ7)<br>• **Tab 5:** Noise & Degradation Lab (6 Models: Clean, Gaussian, Salt/Pepper, Rayleigh, Uniform, Periodic + PSNR/MSE) |
+| **`1` – `6`** | **Highlight specific panel (1 to 6)** with an active cyan diagnostic outline. |
+| **`0`** | **Clear active panel highlight**. |
+| **`S`** | **Save 1280×720 composite canvas image** to `data/output/snapshots/` and append quantitative diagnostic row to `snapshot_analysis.csv`. |
+| **`E`** | **Export Comprehensive Academic HTML Lab Report** with KaTeX math equations, tables, and embedded high-res canvases. |
+| **`SPACE` / `Q` / `ESC`** | **Close inspection canvas and resume live tracking immediately** with full state continuity. |
+
+---
+
+## 4. System Architecture & Repository Structure
 
 The codebase is organized into cleanly decoupled, single-responsibility modules:
 
 ```
 IPA_GIG/
-├── config.yaml                    # Declarative configuration file
+├── config.yaml                    # Declarative YAML configuration
 ├── requirements.txt               # Pinned package dependencies
-├── README.md                      # Comprehensive user manual
-├── PROJECT_REPORT.md              # Academic technical report
+├── README.md                      # Comprehensive execution & user manual
+├── PROJECT_REPORT.md              # Academic technical report (IEEE format)
+├── kiit_logo.png                  # University insignia asset
+├── reports/                       # Formal Academic Reports
+│   ├── Unified_Tracking_and_Modal_DIP_Inspection_IPA.pdf   # 29-page formal academic report
+│   ├── Unified_Tracking_and_Modal_DIP_Inspection_IPA.docx  # Editable Word document
+│   └── Unified_Tracking_and_Modal_DIP_Inspection_IPA.md    # Source Markdown report
 ├── models/
+│   ├── .gitkeep                   # Models directory marker
 │   └── yolov8n.pt                 # YOLOv8 nano model weights
 ├── data/
-│   ├── input/                     # Source video directory
+│   ├── input/                     # Source input video clips
 │   └── output/                    # Persistent tracking results & logs
 │       ├── tracking_metrics.csv   # Per-frame kinematics telemetry CSV
 │       ├── snapshot_analysis.csv  # Quantitative DIP diagnostic CSV
 │       ├── tracked_output.avi     # Annotated video output
 │       ├── analytics/             # Publication-quality post-run plots
-│       └── snapshots/             # Saved 1280x720 modal canvas PNGs
+│       └── snapshots/             # Saved 1280x720 modal canvas PNGs & HTML reports
 └── src/
     ├── main.py                    # UNIFIED CENTRAL ORCHESTRATION ENTRY POINT
     ├── config_loader.py           # Dataclass YAML configuration parser
@@ -110,104 +254,9 @@ IPA_GIG/
 
 ---
 
-## 4. Installation & Environment Setup
+## 5. Objective Benchmark Results
 
-The system is tested and verified on Python 3.12 (Windows / Linux / macOS).
-
-```bash
-# 1. Clone repository
-git clone https://github.com/anishkarak4-ux/dipa.git
-cd IPA_GIG
-
-# 2. Create and activate virtual environment
-python -m venv .venv
-# Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-# Linux / macOS:
-source .venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-```
-
-> **IMPORTANT:** Ensure `opencv-contrib-python>=4.8,<5` is installed. Do NOT install regular `opencv-python`, as it shadows tracking algorithms (`TrackerCSRT`, `TrackerKCF`, `TrackerMOSSE`).
-
----
-
-## 5. Usage & Execution Guide
-
-### Central Unified Entry Point (`src/main.py`)
-
-All features are unified through `src/main.py`.
-
-#### A. Classical Tracking Modes
-```bash
-# 1. CSRT Tracker on Webcam (Default, with horizontal mirroring)
-python src/main.py --mode classical --tracker csrt
-
-# 2. Fast KCF Tracker on Video File with DIP Preprocessing
-python src/main.py --mode classical --tracker kcf --source data/output/tracked_output.avi --preprocess
-
-# 3. Headless Batch Execution with Predefined ROI (Automated / Non-Interactive)
-python src/main.py --mode classical --tracker csrt --source data/output/tracked_output.avi --init-roi 284,245,36,38 --max-frames 200 --headless
-```
-
-#### B. YOLO Deep Learning Modes
-```bash
-# 1. YOLOv8n with BoT-SORT (Occlusion-Resistant, Click-to-Lock Target Selection)
-python src/main.py --mode yolo --tracker botsort.yaml --model models/yolov8n.pt
-
-# 2. Fast YOLOv8n with ByteTrack and Post-Run Performance Plots
-python src/main.py --mode yolo --tracker bytetrack.yaml --plot --plot-dir data/output/analytics
-
-# 3. Track All Objects Simultaneously
-python src/main.py --mode yolo --track-all --source data/output/tracked_output.avi
-```
-
-#### C. Legacy Baseline Executables (Backward Compatibility)
-```bash
-# Classical tracker baseline
-python src/tracker_app.py --tracker csrt --video data/output/tracked_output.avi
-
-# YOLO tracker baseline
-python src/yolo_tracker.py --tracker botsort.yaml --source 0
-
-# Baseline metrics analyzer
-python src/plot_metrics.py --metrics data/output/tracking_metrics.csv
-```
-
----
-
-## 6. Interactive Keyboard & Mouse Controls
-
-### During Live Tracking:
-- **`SPACE`:** **Pause tracking and open the Modal DIP Inspection Canvas.**
-- **`R`:** Reset tracker (prompts new ROI selection in Classical mode; clears target lock in YOLO mode).
-- **`C`:** Toggle horizontal webcam mirroring (ON by default for natural webcam interaction).
-- **`P`:** Toggle DIP contrast enhancement & Gaussian preprocessing.
-- **`Mouse Left Click`:**
-  - *Classical mode:* Select initial bounding box via crosshair selection.
-  - *YOLO mode:* Click any detected object on screen to lock persistent tracking onto its ID.
-- **`Q` / `ESC`:** Quit application and write output files.
-
-### Inside Modal DIP Inspection Canvas:
-- **`1` - `6`:** Highlight corresponding DIP inspection panel with a cyan outline banner:
-  - `1`: Full Frame Context
-  - `2`: Target ROI (Original vs Equalized)
-  - `3`: 256-Bin Intensity Histogram & CDF Curves
-  - `4`: Denoising Filters & Differential Edges
-  - `5`: Otsu Segmentation & Morphology Mask
-  - `6`: Contour Extraction & Academic Shape Descriptors
-- **`0`:** Clear active panel selection.
-- **`S`:** Save 1280×720 canvas image to `data/output/snapshots/` and log quantitative row to `snapshot_analysis.csv`.
-- **`SPACE`:** Close modal canvas and resume live tracking immediately.
-- **`Q` / `ESC`:** Exit modal canvas and resume tracking.
-
----
-
-## 7. Objective Benchmark Results
-
-Measurements taken deterministically on the verified test video (`tracked_output.avi`, $640\times 480$, 30 FPS, initial ROI `[284, 245, 36, 38]`):
+Measurements taken deterministically on test video sequence ($640\times 480$, 30 FPS, initial ROI `[284, 245, 36, 38]`):
 
 ### Classical Tracker Benchmark (200 Frames)
 
@@ -218,8 +267,6 @@ Measurements taken deterministically on the verified test video (`tracked_output
 | **MIL** | 200 | **100.0%** | **19.25** | 12.98 | 23.88 | 374.18 px | 2.69 px | 0 | 0 |
 | **MOSSE**| 200 | **84.5%** | **3125.46** | 79.44 | 8051.53 | 652.02 px | 5.82 px | 66 | 31 |
 
-*Note: FPS and robustness represent local CPU hardware measurements and are not universal bounds.*
-
 ### YOLO Tracker Benchmark (60 Frames, CPU)
 
 | Configuration | Total Detections | Unique Tracks | Avg FPS | Avg Confidence | Min / Max Conf | Detected Classes |
@@ -229,7 +276,7 @@ Measurements taken deterministically on the verified test video (`tracked_output
 
 ---
 
-## 8. Output Data Formats
+## 6. Output Data Formats
 
 ### A. Tracking Metrics CSV (`tracking_metrics.csv`)
 Logs per-frame kinematics and state information:
@@ -248,11 +295,15 @@ frame,timestamp,session_id,tracker,track_id,class,confidence,x,y,w,h,roi_width,r
 
 ---
 
-## 9. Known Limitations & Future Improvements
+## 7. Authors & Academic Affiliation
 
-1. **Hardware Dependent Inference:** On low-power CPUs without AVX2 or GPU acceleration, YOLO inference rate is typically 12–20 FPS; real-time 30+ FPS operation requires GPU/DirectML acceleration or model quantization (ONNX / OpenVINO).
-2. **Extreme Occlusion:** Classical trackers can drift when an object is fully occluded for extended durations unless the template cross-correlation score recovers the object upon reappearance.
-3. **Future Work:**
-   - Multi-camera spatial re-identification and tracking handoff.
-   - Deep learning semantic segmentation (e.g. YOLOv8-seg) integrated into Panel 5 alongside Otsu thresholding.
-   - Stereo vision or depth camera integration (e.g. Intel RealSense) for true 3D spatial coordinate tracking in meters.
+**Course:** Image Processing and Applications (IPA) Laboratory  
+**Institution:** School of Computer Engineering, Kalinga Institute of Industrial Technology (KIIT) Deemed to be University, Bhubaneswar, Odisha, India  
+**Supervisor:** Prof. Sricheta Parui  
+
+| Student Name | Roll No. | Role & Contribution |
+| :--- | :---: | :--- |
+| **Anish Karak** | 24155833 | **Lead Developer** (Spatial transforms, contour geometry, Haralick texture) |
+| **Yash Agrawal** | 241551089 | **Core Developer** (2D FFT frequency filtering, 8×8 block-DCT compression) |
+| **Awesh Khan** | 24155837 | **Core Developer** (Color spaces, pseudo-color, stochastic noise degradation lab) |
+| **Priyaranjan Sahu** | 241551055 | **Core Developer** (Segmentation, morphology, comparative tracking evaluation) |
