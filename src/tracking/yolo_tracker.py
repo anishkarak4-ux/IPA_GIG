@@ -123,8 +123,13 @@ class YOLOTracker(BaseTracker):
         self.preprocess = bool(preprocess)
         self.mirror = mirror
 
-        # Lazy / initial model instantiation
-        self._model: YOLO = YOLO(self.model_path)
+        # Lazy / initial model instantiation with automatic fallback to download
+        try:
+            self._model: YOLO = YOLO(self.model_path)
+        except Exception as e:
+            fallback_name = Path(self.model_path).name
+            logger.warning("Could not load '%s' (%s). Trying fallback '%s'...", self.model_path, e, fallback_name)
+            self._model = YOLO(fallback_name)
 
         # Tracking state
         self._is_tracking: bool = False

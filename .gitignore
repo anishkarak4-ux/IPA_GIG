@@ -9,16 +9,20 @@ env/
 
 data/input/*
 !data/input/.gitkeep
+!data/input/sample_demo.avi
 data/output/*
 !data/output/.gitkeep
 
 *.avi
+!data/input/sample_demo.avi
 *.mp4
 *.mov
 *.mkv
 *.csv
 *.pt
+!models/yolov8n.pt
 models/*.pt
+!models/yolov8n.pt
 *.log
 scratch/
 /tracking_metrics_plot.png
