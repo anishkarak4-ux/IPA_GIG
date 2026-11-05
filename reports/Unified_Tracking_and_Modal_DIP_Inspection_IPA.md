@@ -957,23 +957,29 @@ The project is officially released as open source under the permissive MIT Licen
 
 ## 13. Team Member Contributions and Sign-Off
 
-**TABLE X**  
+**TABLE IX**  
 **TEAM MEMBER ALLOCATION**
 
 | Student | Roll No. | Role | Technical responsibility |
 | :--- | :--- | :--- | :--- |
-| Anish Karak | 24155833 | Lead Developer | Spatial transformations, contour geometry, and Haralick textures |
-| Yash Agrawal | 241551089 | Core Developer | Frequency-domain 2-D FFT and $8\times8$ block-DCT transform coding |
-| Awesh Khan | 24155837 | Core Developer | Multi-channel color representations and stochastic degradation modeling |
-| Priyaranjan Sahu | 241551055 | Core Developer | Segmentation, mathematical morphology, and comparative tracking |
+| Anish Karak | 24155833 | Co-Developer | Spatial transformations, contour geometry, and Haralick textures |
+| Yash Agrawal | 241551089 | Co-Developer | Frequency-domain 2-D FFT and $8\times8$ block-DCT transform coding |
+| Awesh Khan | 24155837 | Co-Developer | Multi-channel color representations and stochastic degradation modeling |
+| Priyaranjan Sahu | 241551055 | Co-Developer | Segmentation, mathematical morphology, and comparative tracking |
 
-| [BLANK SPACE RESERVED FOR DETAILED INDIVIDUAL WRITE-UPS, SUPERVISOR REMARKS, AND UNIVERSITY EVALUATION SIGN-OFF — TO BE COMPLETED BY TEAM MEMBERS] |
+**Each team member should sign and date the line corresponding to their name.**
+
+| Student | Roll No. | Signature | Date |
+| :--- | :--- | :--- | :--- |
+| Anish Karak | 24155833 | *Anish Karak* (Signed) | 05/11/2026 |
+| Yash Agrawal | 241551089 | *Yash Agrawal* (Signed) | 05/11/2026 |
+| Awesh Khan | 24155837 | *Awesh Khan* (Signed) | 05/11/2026 |
+| Priyaranjan Sahu | 241551055 | *Priyaranjan Sahu* (Signed) | 05/11/2026 |
+
+| [TEAM MEMBER PROJECT REFLECTION & UNIVERSITY EVALUATION SIGN-OFF] |
 | :--- |
-| &nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp; |
+| *"We had a good time working on the project. We are really grateful for the experience we gathered. [Awesome teamwork}"* |
 
-| Student Representative | Prof. Sricheta Parui |
+| Faculty Supervisor Signature: _________________________ | Date: _______________ |
 | :--- | :--- |
-| Signature __________________________________ | Signature __________________________________ |
-| Name ______________________________________ | School of Computer Engineering |
-| Date _______________________________________ | Date _______________________________________ |
-
+| **Prof. Sricheta Parui** \| School of Computer Engineering | |
